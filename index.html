@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>স্টেপ মেকার ক্যালকুলেটর (দ্বিগুণ বৃদ্ধি)</title>
+    <style>
+        /* CSS Styling - সবুজ থিম */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .calculator-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            color: #28a745; 
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="number"] {
+            width: 95%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #28a745; 
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background-color: #1e7e34;
+        }
+        .results-box {
+            background-color: #e6ffec; 
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .result-item {
+            background-color: #ffffff;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border-left: 5px solid #28a745; 
+            color: #333;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .total-used {
+            color: #008000; 
+            font-weight: bold;
+            text-align: right;
+            margin-top: 15px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator-container">
+    <h2>স্টেপ মেকার ক্যালকুলেটর</h2>
+
+    <label for="totalAmount">মোট টাকা (৳):</label>
+    <input type="number" id="totalAmount" value="500" min="1" required>
+
+    <label for="stepCount">স্টেপ সংখ্যা:</label>
+    <input type="number" id="stepCount" value="29" min="2" required>
+
+    <button onclick="calculateSteps()">স্টেপ তৈরি করুন</button>
+
+    <div class="results-box" id="resultsBox">
+        <div id="stepResults">
+            </div>
+        <div class="total-used" id="totalUsed"></div>
+    </div>
+</div>
+
+<script>
+    /* JavaScript Logic: Strict Double Rate (Geometric Progression with Ratio 2) */
+    function calculateSteps() {
+        const totalAmount = parseFloat(document.getElementById('totalAmount').value);
+        const stepCount = parseInt(document.getElementById('stepCount').value);
+        const resultsDiv = document.getElementById('stepResults');
+        const totalUsedDiv = document.getElementById('totalUsed');
+        
+        resultsDiv.innerHTML = '';
+        totalUsedDiv.innerHTML = '';
+
+        if (isNaN(totalAmount) || totalAmount <= 0 || isNaN(stepCount) || stepCount < 2) {
+            alert("দয়া করে সঠিক মোট টাকা এবং স্টেপ সংখ্যা লিখুন।");
+            return;
+        }
+
+        // কঠোর দ্বিগুণ বৃদ্ধির জন্য সাধারণ অনুপাত (Common Ratio) = 2
+        const commonRatio = 2.0; 
+
+        // প্রথম ধাপের টাকা (a) বের করার সূত্র: a = S * (r - 1) / (r^n - 1)
+        // যেখানে S = 500, r = 2, n = 29 হলে, প্রথম ধাপ (a) প্রায় 0.4913 টাকা হয়।
+        const rPowerN = Math.pow(commonRatio, stepCount);
+        let firstStep = totalAmount * (commonRatio - 1) / (rPowerN - 1);
+
+        let currentStepAmount = firstStep;
+        let totalCalculated = 0;
+        let amounts = []; // রাউন্ডিং সমস্যা এড়াতে অ্যারে ব্যবহার
+
+        // প্রতিটি ধাপের টাকার পরিমাণ গণনা
+        for (let i = 0; i < stepCount; i++) {
+            amounts.push(currentStepAmount);
+            currentStepAmount *= commonRatio;
+        }
+        
+        // রাউন্ডিং এবং যোগফল নির্ণয়
+        for (let i = 0; i < stepCount; i++) {
+            let amount = amounts[i];
+            
+            // শেষ ধাপে মোট টাকার সাথে সামঞ্জস্য করার জন্য সামান্য ত্রুটি সংশোধন
+            if (i === stepCount - 1) {
+                amount = totalAmount - totalCalculated;
+            } else {
+                amount = parseFloat(amount.toFixed(2));
+            }
+            
+            totalCalculated += amount;
+
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item';
+            
+            // টাকা বাংলা ফরম্যাটে প্রদর্শন
+            resultItem.textContent = `স্টেপ ${i + 1}: ${amount.toLocaleString('bn-BD', { style: 'currency', currency: 'BDT', minimumFractionDigits: 2 })}`;
+            
+            resultsDiv.appendChild(resultItem);
+        }
+        
+        // মোট ব্যবহৃত টাকা প্রদর্শন
+        const finalTotal = totalAmount; // গাণিতিক ভাবে totalAmount এর সমান হবে
+        totalUsedDiv.textContent = `মোট ব্যবহৃত: ${finalTotal.toLocaleString('bn-BD', { style: 'currency', currency: 'BDT', minimumFractionDigits: 2 })}`;
+
+    }
+
+    // পেজ লোড হওয়ার সাথে সাথে ডিফল্ট হিসাবটি দেখানো
+    window.onload = function() {
+        calculateSteps();
+    };
+
+</script>
+</body>
+</html>
